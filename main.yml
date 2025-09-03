@@ -1,0 +1,182 @@
+openapi: "3.0.3"
+info:
+  title: STD24225
+  version: "1.0"
+  description: This is a specification of STD24225
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: Health
+    description: Health check
+  - name: Cars
+    description: Operations related to cars
+components:
+  schemas:
+    Characteristics:
+      type: object
+      properties:
+        max_speed:
+          type: number
+        max_fuel_capacity:
+          type: number
+      required:
+        - max_speed
+        - max_fuel_capacity
+      example:
+        max_speed: 220
+        max_fuel_capacity: 50
+
+    Car:
+      type: object
+      properties:
+        identifier:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        characteristics:
+          $ref: "#/components/schemas/Characteristics"
+      required:
+        - identifier
+        - brand
+        - model
+        - characteristics
+      example:
+        identifier: "1"
+        brand: "Toyota"
+        model: "Corolla"
+        characteristics:
+          max_speed: 180
+          max_fuel_capacity: 55
+
+paths:
+  /ping:
+    get:
+      tags:
+        - Health
+      summary: Ping test
+      responses:
+        "200":
+          description: Pong response
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
+
+  /cars:
+    get:
+      tags:
+        - Cars
+      summary: Get all cars
+      responses:
+        "200":
+          description: List of cars
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cars:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Car"
+
+    post:
+      tags:
+        - Cars
+      summary: Create cars
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/Car"
+      responses:
+        "201":
+          description: Cars created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cars:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Car"
+
+  /cars/{id}:
+    get:
+      tags:
+        - Cars
+      summary: Get car by identifier
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Car found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  car:
+                    $ref: "#/components/schemas/Car"
+        "404":
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Car with id '1' not found
+
+  /cars/{id}/characteristics:
+    put:
+      tags:
+        - Cars
+      summary: Update car characteristics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Characteristics"
+      responses:
+        "200":
+          description: Car updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  car:
+                    allOf:
+                      - $ref: "#/components/schemas/Car"
+        "404":
+          description: Car not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: Car with id '1' not found
